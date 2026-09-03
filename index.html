@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SI Physics Unit Converter | แอปแปลงหน่วยฟิสิกส์ระบบ SI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="bg-grid" aria-hidden="true"></div>
+
+<button id="darkModeToggle" class="theme-toggle" type="button" aria-label="สลับโหมดกลางวัน/กลางคืน">
+  <span id="themeIcon">🌙</span>
+</button>
+
+<button id="devToggle" class="dev-toggle" type="button" aria-label="ดูข้อมูลผู้พัฒนา" aria-haspopup="dialog">
+  <span aria-hidden="true">👨‍💻</span>
+</button>
+
+<!-- ========== Header ========== -->
+<header class="app-header">
+  <div class="header-inner">
+    <div class="header-icons" aria-hidden="true">⚛️ 📐 🔬 ⚡</div>
+    <h1 class="header-title">
+      <span class="title-en">SI Physics Unit Converter</span>
+      <span class="title-th">แอปแปลงหน่วยฟิสิกส์ระบบ SI</span>
+    </h1>
+    <p class="header-desc">เลือกปริมาณทางฟิสิกส์ที่ต้องการก่อน แล้วจึงเลือกหน่วยต้นทาง-ปลายทาง พร้อมวิธีคำนวณทีละขั้นตอน</p>
+  </div>
+  <svg class="header-wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0,32 C240,64 480,0 720,16 C960,32 1200,64 1440,24 L1440,60 L0,60 Z"></path>
+  </svg>
+</header>
+
+<main class="container">
+
+  <!-- ========================================================
+       VIEW 1: หน้าเลือกปริมาณ (Category Picker)
+       ======================================================== -->
+  <section id="homeView" class="view">
+
+    <div class="section-heading">
+      <h2>1️⃣ เลือกปริมาณที่ต้องการแปลงหน่วย</h2>
+      <p class="section-sub">แตะการ์ดเพื่อเข้าสู่หน้าแปลงหน่วยของปริมาณนั้น</p>
+    </div>
+
+    <div id="categoryGrid" class="category-grid" role="list"></div>
+
+    <!-- ========== ตาราง SI Prefix ========== -->
+    <section class="card" aria-labelledby="prefixHeading">
+      <h2 id="prefixHeading" class="card-title">📊 ตารางคำอุปสรรค SI (Exa → Atto)</h2>
+      <p class="card-sub">ช่วงคำอุปสรรคที่ใช้ในแอปนี้ ตั้งแต่ 10¹⁸ ถึง 10⁻¹⁸</p>
+      <div class="table-scroll">
+        <table id="prefixTable" class="prefix-table">
+          <thead>
+            <tr>
+              <th>Prefix</th>
+              <th>ชื่อ</th>
+              <th>สัญลักษณ์</th>
+              <th>ตัวคูณ</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ========== ประวัติ ========== -->
+    <section class="card" aria-labelledby="historyHeading">
+      <div class="card-title-row">
+        <h2 id="historyHeading" class="card-title">🕘 ประวัติการคำนวณ</h2>
+        <button type="button" id="clearHistoryBtn" class="btn btn-ghost btn-small">ล้างประวัติ</button>
+      </div>
+      <ul id="historyList" class="history-list">
+        <li class="history-empty">ยังไม่มีประวัติการคำนวณ</li>
+      </ul>
+    </section>
+
+  </section>
+
+  <!-- ========================================================
+       VIEW 2: หน้าแปลงหน่วย (Converter) — แสดงเมื่อเลือกปริมาณแล้ว
+       ======================================================== -->
+  <section id="converterView" class="view" hidden>
+
+    <button type="button" id="backBtn" class="back-btn" aria-label="กลับไปหน้าเลือกปริมาณ">
+      ← กลับไปเลือกปริมาณ
+    </button>
+
+    <div class="conv-heading">
+      <span id="convIcon" class="conv-icon" aria-hidden="true"></span>
+      <div>
+        <h2 id="convTitleTh" class="conv-title-th"></h2>
+        <p id="convTitleEn" class="conv-title-en"></p>
+      </div>
+    </div>
+
+    <!-- ========== Card หลัก: ตัวแปลงหน่วย ========== -->
+    <section class="card converter-card" aria-labelledby="converterHeading">
+      <h2 id="converterHeading" class="card-title">2️⃣ เลือกหน่วยและกรอกจำนวน</h2>
+
+      <div class="field-group">
+        <label for="amountInput">จำนวน</label>
+        <input type="text" inputmode="decimal" id="amountInput" placeholder="กรอกตัวเลข เช่น 10 หรือ 1.5e3" aria-describedby="inputError">
+        <p id="inputError" class="error-text" role="alert" hidden>⚠️ กรุณากรอกตัวเลขที่ถูกต้อง</p>
+      </div>
+
+      <div class="field-group sci-toggle-group">
+        <label class="switch-label" for="sciModeToggle">
+          <span class="switch">
+            <input type="checkbox" id="sciModeToggle">
+            <span class="switch-slider" aria-hidden="true"></span>
+          </span>
+          🔬 แสดงผลลัพธ์เป็นเลขสัญกรณ์วิทยาศาสตร์ (Scientific Notation)
+        </label>
+      </div>
+
+      <div class="unit-row">
+        <div class="field-group">
+          <label for="fromUnit">หน่วยต้นทาง</label>
+          <select id="fromUnit" aria-label="หน่วยต้นทาง"></select>
+        </div>
+
+        <button type="button" id="swapBtn" class="swap-btn" aria-label="สลับหน่วยต้นทางและปลายทาง" title="สลับหน่วย">⇅</button>
+
+        <div class="field-group">
+          <label for="toUnit">หน่วยปลายทาง</label>
+          <select id="toUnit" aria-label="หน่วยปลายทาง"></select>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button type="button" id="convertBtn" class="btn btn-primary" aria-label="แปลงหน่วย">✅ แปลงหน่วย</button>
+        <button type="button" id="clearBtn" class="btn btn-secondary" aria-label="ล้างข้อมูล">🗑️ ล้างข้อมูล</button>
+      </div>
+
+      <!-- ผลลัพธ์ -->
+      <div id="resultBox" class="result-box" hidden aria-live="polite">
+        <p class="result-label">ผลลัพธ์</p>
+        <p id="resultMain" class="result-main"></p>
+        <p class="result-ok">✅ คำตอบถูกต้อง</p>
+        <button type="button" id="copyBtn" class="btn btn-ghost">📋 คัดลอกผลลัพธ์</button>
+        <span id="copyStatus" class="copy-status" role="status"></span>
+      </div>
+
+      <!-- วิธีทำ -->
+      <div id="stepsBox" class="steps-box" hidden>
+        <h3>📚 วิธีทำ</h3>
+        <ol id="stepsList" class="steps-list"></ol>
+      </div>
+    </section>
+
+    <!-- ========== ตัวอย่างของปริมาณนี้ ========== -->
+    <section class="card" aria-labelledby="examplesHeading">
+      <h2 id="examplesHeading" class="card-title">💡 ตัวอย่างการแปลงหน่วย</h2>
+      <p class="card-sub">กดตัวอย่างเพื่อนำค่าไปคำนวณทันที</p>
+      <div id="examplesGrid" class="examples-grid"></div>
+    </section>
+
+  </section>
+
+</main>
+
+<footer class="app-footer">
+  <p class="footer-title">SI Physics Unit Converter</p>
+  <p>เครื่องมือช่วยเรียนรู้การเปลี่ยนหน่วยทางฟิสิกส์</p>
+  <p>จัดทำเพื่อการศึกษา</p>
+  <p class="footer-copy">© 2026</p>
+</footer>
+
+<!-- ========== Modal: ผู้พัฒนา ========== -->
+<div id="devModalOverlay" class="modal-overlay" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="devModalTitle">
+    <button type="button" id="devModalClose" class="modal-close" aria-label="ปิดหน้าต่างผู้พัฒนา">✕</button>
+    <h2 id="devModalTitle" class="modal-title">👨‍💻 ทีมผู้พัฒนา</h2>
+    <p class="modal-sub">แอปพลิเคชันนี้จัดทำโดย</p>
+
+    <div class="dev-grid">
+      <div class="dev-card">
+        <div class="dev-photo">
+          <!-- เปลี่ยน src เป็นรูปของผู้พัฒนาคนที่ 1 -->
+          <img src="dev1.jpg" alt="รูปผู้พัฒนาคนที่ 1" onerror="this.style.display='none'; this.parentElement.classList.add('no-img')">
+        </div>
+        <!-- แก้ชื่อผู้พัฒนาคนที่ 1 ตรงนี้ -->
+        <p class="dev-name">ชื่อผู้พัฒนา 1</p>
+      </div>
+
+      <div class="dev-card">
+        <div class="dev-photo">
+          <!-- เปลี่ยน src เป็นรูปของผู้พัฒนาคนที่ 2 -->
+          <img src="dev2.jpg" alt="รูปผู้พัฒนาคนที่ 2" onerror="this.style.display='none'; this.parentElement.classList.add('no-img')">
+        </div>
+        <!-- แก้ชื่อผู้พัฒนาคนที่ 2 ตรงนี้ -->
+        <p class="dev-name">ชื่อผู้พัฒนา 2</p>
+      </div>
+
+      <div class="dev-card">
+        <div class="dev-photo">
+          <!-- เปลี่ยน src เป็นรูปของผู้พัฒนาคนที่ 3 -->
+          <img src="dev3.jpg" alt="รูปผู้พัฒนาคนที่ 3" onerror="this.style.display='none'; this.parentElement.classList.add('no-img')">
+        </div>
+        <!-- แก้ชื่อผู้พัฒนาคนที่ 3 ตรงนี้ -->
+        <p class="dev-name">ชื่อผู้พัฒนา 3</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
